@@ -19,5 +19,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-include_recipe 'sumologic-collector' unless node['sumologic']['disabled'] ||
-                                            node['sumologic']['custom_install']
+if not node['sumologic']['disabled']
+  include_recipe 'chef-sumologic::install' 
+  include_recipe 'chef-sumologic::sumoconf'
+
+  node.set['sumologic']['use_json_path_dir'] == true
+  # use the recipe sumojsondir if your source configurations are in a directory
+  include_recipe 'chef-sumologic::sumojsondir'
+
+
+  service 'collector' do
+    supports start: true, status: true, restart: true
+    action :start
+  end
+
+end

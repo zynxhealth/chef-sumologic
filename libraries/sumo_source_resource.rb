@@ -2,7 +2,10 @@ class Chef
   class Resource
     class SumoSource < Chef::Resource
       identity_attr :path
-      state_attrs :category, :default_timezone, :force_timezone
+      state_attrs :path, :category, :default_timezone, :force_timezone, :automatic_date_parsing,
+	      :multiline_processing_enabled, :use_autoline_matching, :manual_prefix_regexp,
+	      :default_date_format
+
       provider_base Chef::Provider::SumoSource
 
       def initialize(name, run_context = nil)

@@ -1,0 +1,25 @@
+name=<%= node['sumologic']['name'] ? node['sumologic']['name'] : node.name %>
+<% if !node['sumologic']['use_json_path_dir'] -%>
+sources=<%=node['sumologic']['sumo_json_path']%>
+<% end -%>
+ephemeral=<%= node['sumologic']['ephemeral'] %>
+<%=
+  attribs = []
+  if @accessID && @accessKey
+    attribs.push("accessid=#{@accessID.inspect[1..-2]}")
+    attribs.push("accesskey=#{@accessKey.inspect[1..-2]}")
+  elsif @email && @password
+    attribs.push("email=#{@email.inspect[1..-2]}}")
+    attribs.push("password=#{@password.inspect[1..-2]}}")
+  else
+    attribs.push("No credentials passed to template!!!")
+  end
+
+  attribs.join("\n")
+%>
+<% if node['sumologic']['local_management'] -%>
+syncSources=<%=node['sumologic']['sumo_json_path']%>
+<% end -%>
+
+disableScriptSource=true
+disableActionSource=true

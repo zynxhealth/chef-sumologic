@@ -15,10 +15,33 @@ class Chef
 
       def load_current_resource
         return if node['sumologic']['disabled']
+        credentials = {}
+
+        if node['sumologic']['credentials']
+          creds = node['sumologic']['credentials']
+          if creds[:secret_file]
+            secret = Chef::EncryptedDataBagItem.load_secret(creds[:secret_file])
+            item = Chef::EncryptedDataBagItem.load(creds[:bag_name], creds[:item_name], secret)
+          else
+            #if ChefVault::Item.vault?(creds[:bag_name], creds[:item_name])
+            #  item = ChefVault::Item.load(creds[:bag_name], creds[:item_name])
+            #else
+              item = data_bag_item(creds[:bag_name], creds[:item_name])
+            #end
+          end
+          [:accessID, :accessKey].each do |sym|
+            credentials[sym] = item[sym.to_s] # Chef::DataBagItem 10.28 doesn't work with symbols
+          end
+        else
+          [:accessID, :accessKey].each do |sym|
+            credentials[sym] = node['sumologic'][sym]
+          end
+        end
+
         @@collector ||= Sumologic::Collector.new(
           name: node.name,
-          api_username: node['sumologic']['userID'],
-          api_password: node['sumologic']['password'],
+          api_id: credentials[:accessID],
+          api_key: credentials[:accessKey],
           api_timeout: node['sumologic']['api_timeout']
         )
 
@@ -54,7 +77,8 @@ class Chef
           if @@collector.source_exist?(new_resource.name)
             if sumo_source_different?
               converge_by("replace #{new_resource.name} via api\n" + convergence_description) do
-                @@collector.update_source!(@@collector.source(new_resource.name)['id'], new_resource.to_sumo_hash, node['sumologic']['api_timeout'])
+                #@@collector.update_source!(@@collector.source(new_resource.name)['id'], new_resource.to_sumo_hash, node['sumologic']['api_timeout'])
+                @@collector.update_source!(@@collector.source(new_resource.name)['id'], new_resource.to_sumo_hash)
                 @@collector.refresh!
               end
               @new_resource.updated_by_last_action(true)
@@ -62,7 +86,8 @@ class Chef
             end
           else
             converge_by("add #{new_resource.name} via sumologic api\n" + new_resource.to_sumo_hash.to_s)  do
-              @@collector.add_source!(new_resource.to_sumo_hash, node['sumologic']['api_timeout'])
+              #@@collector.add_source!(new_resource.to_sumo_hash, node['sumologic']['api_timeout'])
+              @@collector.add_source!(new_resource.to_sumo_hash)
               @@collector.refresh!
             end
             @new_resource.updated_by_last_action(true)

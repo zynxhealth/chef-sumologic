@@ -42,7 +42,7 @@ wrapper.lang.folder=../lang
 #  Locate the java binary on the system PATH:
 #wrapper.java.command=java
 #  Specify a specific java binary:
-wrapper.java.command=<%= node['java']['java_home'] %>/bin/java
+wrapper.java.command=<%= @java_location %>
 
 # Tell the Wrapper to log the full generated Java command line.
 #wrapper.java.command.loglevel=INFO
@@ -55,10 +55,10 @@ wrapper.java.mainclass=org.tanukisoftware.wrapper.WrapperSimpleApp
 
 # Java Classpath (include wrapper.jar)  Add class path elements as
 #  needed starting from 1
-wrapper.java.classpath.1=./19.95-10/lib/*
+wrapper.java.classpath.1=./<%= @sumover %>/lib/*
 
 # Java Library Path (location of Wrapper.DLL or libwrapper.so)
-wrapper.java.library.path.1=./19.95-10/bin/native/lib
+wrapper.java.library.path.1=./<%= @sumover %>/bin/native/lib
 
 # Java Bits.  On applicable platforms, tells the JVM to run in 32 or 64-bit mode.
 wrapper.java.additional.auto_bits=TRUE
@@ -73,16 +73,18 @@ wrapper.java.initmemory=64
 # Maximum Java Heap Size (in MB)
 wrapper.java.maxmemory=128
 
-# Proxy server configuration
-wrapper.java.additional.1=-XX:+UseParallelGC 
-wrapper.java.additional.2=-server
-wrapper.java.additional.3=-Dhttps.proxyHost=<%= node['sumologic']['proxy']['host'] %>
-wrapper.java.additional.4=-Dhttps.proxyPort=<%= node['sumologic']['proxy']['port'] %>
-
 # Application parameters.  Add parameters as needed starting from 1
 wrapper.app.parameter.1=com.sumologic.scala.collector.Collector
 wrapper.app.parameter.2=-b
 wrapper.app.parameter.3=installerSources/selected.json
+wrapper.app.parameter.4=-e
+wrapper.app.parameter.5=<%= @sumo_email %>
+wrapper.app.parameter.6=-p
+wrapper.app.parameter.7=<%= @sumo_pass %>
+<%# Can't pass this evaluated; it would get evaluated before it ever got set %>
+<% if @selectedjson.updated_by_last_action? %>
+wrapper.app.parameter.8=-c
+<% end %>
 
 #********************************************************************
 # Wrapper Logging Properties
@@ -117,19 +119,6 @@ wrapper.logfile.maxfiles=10
 
 # Log Level for sys/event log output.  (See docs for log levels)
 wrapper.syslog.loglevel=NONE
-
-#********************************************************************
-# Wrapper Timeout Properties
-#********************************************************************
-# Number of seconds to allow between the time that the JVM reports that it is
-# stopped and the time that the JVM process actually terminates. Setting this
-# property value to "0" (zero) means never time out.
-wrapper.jvm_exit.timeout=60
-
-# Occasionally other processes may consume most of the CPU on the collector
-# box, when this happens the collector could timeout.  Increasing this from
-# 30 second default to provide more breathing space when this occurs.
-wrapper.ping.timeout=60
 
 #********************************************************************
 # Wrapper General Properties
@@ -196,10 +185,7 @@ wrapper.filter.message.1000=The JVM has run out of memory.
 #wrapper.event.wrapper_stop.email=TRUE
 
 # Specify custom mail content
-wrapper.event.jvm_restart.email.body=The JVM was restarted.
-
-Please check on its status.
-
+wrapper.event.jvm_restart.email.body=The JVM was restarted.\n\nPlease check on its status.\n
 
 #********************************************************************
 # Wrapper Windows NT/2000/XP Service Properties

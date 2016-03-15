@@ -6,6 +6,4 @@ description      "Installs/configures Sumo Logic's sumocollector"
 long_description IO.read(File.join(File.dirname(__FILE__), 'README.md'))
 version          '1.0.0'
 
-depends 'sumologic-collector'
-
 recipe 'sumologic', 'Installs Sumo Logic collector, and provides resources for forwarding logs to sumologic'
